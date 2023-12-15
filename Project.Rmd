@@ -8,25 +8,6 @@ date: "2023-12-12"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 
 
@@ -66,7 +47,9 @@ dim(is.na(data))
 ```
 
 
-
+```{r,results='markup'}
+data$`Customer.Full.Name` <- paste(data$`Customer.Fname`, data$`Customer.Lname`)
+```
 ```{r,results='markup'}
 colSums(is.na(data))
 ```
@@ -84,7 +67,12 @@ data$Product.Description <- NULL
 data$Product.Image<-NULL
 data$order.date..DateOrders. <- NULL
 data$shipping.date..DateOrders.<- NULL
-
+data$Customer.Fname <- NULL
+data$Customer.Lname <- NULL
+data$Product.Status <-NULL
+data$Customer.Street <- NULL
+data$Latitude<- NULL
+data$Longitude <- NULL
 ```
 
 ```{r,results='markup'}
@@ -159,7 +147,13 @@ value_counts
 ```{r,results='markup'}
 data[1,]
 ```
+```{r,results='markup'}
+Days.for.shipping..real.,Days.for.shipment..scheduled.,Benefit.per.order,Sales.per.customer,Order.Item.Discount,
+Order.Item.Discount.Rate,Order.Item.Product.Price,Order.Item.Profit.Ratio,Order.Item.Quantity,Sales,Order.Item.Total,Order.Profit.Per.Order,Product.Price.
 
+
+
+```
 # EDA
 
 
@@ -223,6 +217,18 @@ ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total
   theme(axis.text.y = element_text(angle = 0, hjust = 1)) + 
   scale_y_continuous(breaks = c(0, 2, 4, 6), labels = c("0", "2", "4", "6")) 
 ```
+
+
+
+#Model Building
+
+```{r,results='markup'}
+train_data <- data
+```
+
+
+
+
 
 
 
