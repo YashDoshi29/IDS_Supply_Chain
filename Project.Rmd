@@ -1,0 +1,176 @@
+---
+title: "Project"
+output: html_document
+date: "2023-12-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Data Pre-processing
+
+```{r,results='markup'}
+data= read.csv('DataCoSupplyChainDataset.csv')
+head(data)
+```
+
+
+```{r,results='markup'}
+str(data)
+```
+
+
+```{r,results='markup'}
+dim(is.na(data))
+```
+
+
+
+```{r,results='markup'}
+colSums(is.na(data))
+```
+
+```{r,results='markup'}
+data[1, ]
+
+```
+
+```{r,results='markup'}
+data$Customer.Email <- NULL
+data$Customer.Password <- NULL
+data$Order.Zipcode <-NULL
+data$Product.Description <- NULL
+data$Product.Image<-NULL
+```
+
+```{r,results='markup'}
+data[1,]
+```
+
+```{r,results='markup'}
+colSums(is.na(data))
+```
+
+```{r,results='markup'}
+data <- na.omit(data)
+```
+
+```{r,results='markup'}
+dim(data)
+```
+
+```{r,results='markup'}
+str(data)
+```
+
+```{r,results='markup'}
+unique_values_count <- sapply(data, function(x) length(unique(x)))
+unique_values_count
+```
+
+
+```{r,results='markup'}
+colnames(data)
+```
+
+```{r,results='markup'}
+data$Type <- as.factor(data$Type)
+data$Delivery.Status <- as.factor(data$Delivery.Status)
+data$Late_delivery_risk <- as.factor(data$Late_delivery_risk)
+data$Category.Id <- as.factor(data$Category.Id)
+data$Category.Name <- as.factor(data$Category.Name)
+data$Customer.City <- as.factor(data$Customer.City)
+data$Customer.Country <- as.factor(data$Customer.Country)
+data$Customer.Fname <- as.factor(data$Customer.Fname)
+data$Customer.Lname <- as.factor(data$Customer.Lname)
+data$Customer.Segment <- as.factor(data$Customer.Segment)
+data$Customer.State <- as.factor(data$Customer.State)
+data$Department.Id <- as.factor(data$Department.Id)
+data$Department.Name <- as.factor(data$Department.Name)
+data$Market <- as.factor(data$Market)
+data$Order.City <- as.factor(data$Order.City)
+data$Order.Country <- as.factor(data$Order.Country)
+data$Order.Region <- as.factor(data$Order.Region)
+data$Order.State <- as.factor(data$Order.State)
+data$Order.Status <- as.factor(data$Order.Status)
+data$Product.Card.Id <- as.factor(data$Product.Card.Id)
+data$Product.Category.Id <- as.factor(data$Product.Category.Id)
+data$Product.Name <- as.factor(data$Product.Name)
+data$Shipping.Mode <- as.factor(data$Shipping.Mode)
+```
+```{r,results='markup'}
+data$order.date..DateOrders. <- as.Date(data$order.date..DateOrders., format = "format_string1")
+data$shipping.date..DateOrders. <- as.Date(data$shipping.date..DateOrders., format = "format_string2")
+```
+
+
+```{r,results='markup'}
+sapply(data, class)
+```
+
+```{r,results='markup'}
+value_counts <- table(data$Late_delivery_risk)
+value_counts
+```
+
+
+
+
+
+
+# EDA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
