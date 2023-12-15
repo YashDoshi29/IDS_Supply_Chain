@@ -82,6 +82,9 @@ data$Customer.Password <- NULL
 data$Order.Zipcode <-NULL
 data$Product.Description <- NULL
 data$Product.Image<-NULL
+data$order.date..DateOrders. <- NULL
+data$shipping.date..DateOrders.<- NULL
+
 ```
 
 ```{r,results='markup'}
@@ -139,10 +142,7 @@ data$Product.Category.Id <- as.factor(data$Product.Category.Id)
 data$Product.Name <- as.factor(data$Product.Name)
 data$Shipping.Mode <- as.factor(data$Shipping.Mode)
 ```
-```{r,results='markup'}
-data$order.date..DateOrders. <- as.Date(data$order.date..DateOrders., format = "format_string1")
-data$shipping.date..DateOrders. <- as.Date(data$shipping.date..DateOrders., format = "format_string2")
-```
+
 
 
 ```{r,results='markup'}
@@ -156,16 +156,73 @@ value_counts
 
 
 
-
-
+```{r,results='markup'}
+data[1,]
+```
 
 # EDA
 
 
+```{r,results='markup'}
+library(ggplot2)
+
+custom_colors <- c("#004c6d", "#005b8f", "#0072b2", "#0088d2", "#009fdd")
 
 
+par(mar = c(5, 5, 4, 2))
 
 
+category_counts <- table(data$Type)
+percentage <- round((category_counts / sum(category_counts)) * 100, 2)
+
+# Create labels with percentages
+labels_with_percentage <- paste(names(category_counts), "\n", format(percentage, nsmall = 2), "%", sep = "")
+
+
+pie(category_counts,
+    labels = labels_with_percentage,
+
+    col = custom_colors,
+    cex = 0.8,
+    init.angle = 90, 
+    border = "white" 
+)
+
+
+legend("topright",
+       legend = names(category_counts),
+       fill = custom_colors,
+       cex = 0.8, 
+       bty = "n"
+)
+
+title(main = "Distribution of Payment Methods", cex.main = 2)
+
+```
+
+
+```{r, results='markup'}
+
+library(dplyr)
+total_sales_per_category <- data %>%
+  group_by(Category.Name) %>%
+  summarize(Total.Sales = sum(Sales)) %>%
+  arrange(desc(Total.Sales))
+
+
+top_10_categories <- head(total_sales_per_category, 10)
+
+
+ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total.Sales / 1e6)) + 
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + 
+  labs(title = "Top Performers: Highest-Selling Product Categories",
+       x = "Categories",
+       y = "Total Sales (in Millions)") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1)) + 
+  scale_y_continuous(breaks = c(0, 2, 4, 6), labels = c("0", "2", "4", "6")) 
+```
 
 
 
