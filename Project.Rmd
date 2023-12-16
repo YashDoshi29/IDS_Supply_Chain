@@ -132,11 +132,10 @@ library(corrplot)
 
 numeric_data <- data[, sapply(data, is.numeric)]
 cor_matrix <- cor(numeric_data)
-corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+
+corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45,number.cex = 0.6,tl.cex = 0.6,)
 ```
 
-
-With this Correlation plot, we can observe that there are columns that are redundant like `Order.Item.Product.Price` and `Product.Price`. So let's remove the redundant colmns and plot the correlation again.
 
 ```{r, results='markup'}
 # deleting redundant columns
@@ -227,6 +226,12 @@ print(plot_region)
 ```
 
 ```{r, results='markup'}
+if (!requireNamespace("viridis", quietly = TRUE)) {
+  install.packages("viridis")
+}
+
+library(viridis)
+
 total_sales_per_category <- data %>%
   group_by(Category.Name) %>%
   summarize(Total.Sales = sum(Sales)) %>%
@@ -237,7 +242,7 @@ top_10_categories <- head(total_sales_per_category, 10)
 
 
 ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total.Sales / 1e6)) + 
-  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_bar(stat = "identity", fill = viridis(10)) +
   coord_flip() + 
   labs(title = "Top Performers: Highest-Selling Product Categories",
        x = "Categories",
@@ -245,7 +250,49 @@ ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total
   theme_minimal() +
   theme(axis.text.y = element_text(angle = 0, hjust = 1)) + 
   scale_y_continuous(breaks = c(0, 2, 4, 6), labels = c("0", "2", "4", "6")) 
+
 ```
+
+
+```{r, results='markup'}
+# Filter data for losses
+loss <- data[data$`Benefit.per.order` < 0, ]
+
+# Plotting top 10 products with most loss
+plot_top_products <- loss %>%
+  count(`Category.Name`) %>%
+  arrange(desc(n)) %>%
+  head(10) %>%
+  ggplot(aes(x = reorder(`Category.Name`, -n), y = n)) +
+  geom_bar(stat = "identity", fill = "salmon") +
+  labs(title = "Products with Most Loss",
+       x = "Category Name",
+       y = "Number of Orders with Loss") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Plotting top 10 regions with most loss
+plot_top_regions <- loss %>%
+  count(`Order.Region`) %>%
+  arrange(desc(n)) %>%
+  head(10) %>%
+  ggplot(aes(x = reorder(`Order.Region`, -n), y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Regions with Most Loss",
+       x = "Order Region",
+       y = "Number of Orders with Loss") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Print total revenue lost with orders
+cat("Total revenue lost with orders:", sum(loss$`Benefit.per.order`), "\n")
+
+# Display the plots
+print(plot_top_products)
+print(plot_top_regions)
+
+```
+
 
 #Model Building
 
