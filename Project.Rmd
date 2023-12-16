@@ -282,6 +282,17 @@ print(plot_average_sales)
 print(plot_average_price)
 ```
 
+```{r, results='markup'}
+# Scatter plot for Product Price vs. Sales per customer
+ggplot(data, aes(x = `Product.Price`, y = `Sales`)) +
+  geom_point(shape = 1, size = 2, color = "blue", fill = "blue") +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dotted", color = "blue") +
+  labs(title = "Product Price vs Sales per customer",
+       x = "Product Price",
+       y = "Sales per customer") +
+  theme_minimal()
+```
+
 # Model Building
 
 To determine the best model for predicting on-time product delivery, we first analyzed the problem's binary classification nature and the data's features, applying appropriate encoding techniques.
