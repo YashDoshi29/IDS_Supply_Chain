@@ -73,7 +73,7 @@ library(corrplot)
 numeric_data <- data[, sapply(data, is.numeric)]
 cor_matrix <- cor(numeric_data)
 
-corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45,number.cex = 0.6,tl.cex = 0.6,)
+corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45,number.cex = 0.4,tl.cex = 0.5,addCoef.col = "black")
 ```
 
 
