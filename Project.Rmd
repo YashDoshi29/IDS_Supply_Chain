@@ -253,6 +253,35 @@ print(plot_top_regions)
 
 Central America and Western Europe top the chart for the number of loss-incurred orders, indicating potential issues in supply chain, customer satisfaction, or market dynamics in these regions. In contrast, South Asia shows the lowest number of loss-making orders, which could reflect more efficient operations or a better market fit for the products sold there.
 
+```{r, results='markup'}
+# Grouping by Category Name
+category <- data %>% group_by(`Category.Name`)
+
+# Plotting Average Sales for all Categories
+plot_average_sales <- category %>%
+  summarise(average_sales = mean(`Sales`)) %>%
+  arrange(desc(average_sales)) %>%
+  ggplot(aes(x = reorder(`Category.Name`, -average_sales), y = average_sales)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "Average Sales for all Categories", x = "Category Name", y = "Average Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Plotting Average Price for all Categories
+plot_average_price <- category %>%
+  summarise(average_price = mean(`Product.Price`)) %>%
+  arrange(desc(average_price)) %>%
+  ggplot(aes(x = reorder(`Category.Name`, -average_price), y = average_price)) +
+  geom_bar(stat = "identity", fill = "coral") +
+  labs(title = "Average Price for all Categories", x = "Category Name", y = "Average Price") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Display the plots
+print(plot_average_sales)
+print(plot_average_price)
+```
+
 # Model Building
 
 To determine the best model for predicting on-time product delivery, we first analyzed the problem's binary classification nature and the data's features, applying appropriate encoding techniques.
