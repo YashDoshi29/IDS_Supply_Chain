@@ -105,29 +105,7 @@ unique_values_count
 colnames(data)
 ```
 
-```{r,results='markup'}
-data$Type <- as.factor(data$Type)
-data$Delivery.Status <- as.factor(data$Delivery.Status)
-data$Late_delivery_risk <- as.factor(data$Late_delivery_risk)
-data$Category.Id <- as.factor(data$Category.Id)
-data$Category.Name <- as.factor(data$Category.Name)
-data$Customer.City <- as.factor(data$Customer.City)
-data$Customer.Country <- as.factor(data$Customer.Country)
-data$Customer.Segment <- as.factor(data$Customer.Segment)
-data$Customer.State <- as.factor(data$Customer.State)
-data$Department.Id <- as.factor(data$Department.Id)
-data$Department.Name <- as.factor(data$Department.Name)
-data$Market <- as.factor(data$Market)
-data$Order.City <- as.factor(data$Order.City)
-data$Order.Country <- as.factor(data$Order.Country)
-data$Order.Region <- as.factor(data$Order.Region)
-data$Order.State <- as.factor(data$Order.State)
-data$Order.Status <- as.factor(data$Order.Status)
-data$Product.Card.Id <- as.factor(data$Product.Card.Id)
-data$Product.Category.Id <- as.factor(data$Product.Category.Id)
-data$Product.Name <- as.factor(data$Product.Name)
-data$Shipping.Mode <- as.factor(data$Shipping.Mode)
-```
+
 
 
 
@@ -145,7 +123,9 @@ value_counts
 ```{r,results='markup'}
 data[1,]
 ```
-
+```{r,results='markup'}
+install.packages('corrplot')
+```
 
 ```{r, results='markup'}
 library(corrplot)
@@ -154,6 +134,7 @@ numeric_data <- data[, sapply(data, is.numeric)]
 cor_matrix <- cor(numeric_data)
 corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 ```
+
 
 With this Correlation plot, we can observe that there are columns that are redundant like `Order.Item.Product.Price` and `Product.Price`. So let's remove the redundant colmns and plot the correlation again.
 
@@ -255,13 +236,238 @@ train_data <- data
 ```
 
 
+```{r,results='markup'}
+unique_values <- unique(train_data$Order.Status)
+unique_values
+
+```
+
+
+```{r,results='markup'}
+train_data$fraud <- ifelse(train_data$`Order.Status` == 'SUSPECTED_FRAUD', 1, 0)
+train_data$late_delivery <- ifelse(train_data$`Delivery.Status` == 'Late delivery', 1, 0)
+head(train_data,2)
+```
+
+
+
+```{r,results='markup'}
+library(dplyr)
+train_data <- train_data %>%
+  select(-Delivery.Status, -Late_delivery_risk, -Order.Status)
+head(train_data)
+```
+```{r,results='markup'}
+str(train_data)
+```
 
 
 
 
+```{r,results='markup'}
+library(forcats)
+
+train_data <- train_data %>%
+  mutate(
+    `Customer.Country` = as.integer(fct_recode(as_factor(`Customer.Country`), .default = "NA")),
+    Market = as.integer(fct_recode(as_factor(Market), .default = "NA")),
+    Type = as.integer(fct_recode(as_factor(Type), .default = "NA")),
+    `Product.Name` = as.integer(fct_recode(as_factor(`Product.Name`), .default = "NA")),
+    `Customer.Segment` = as.integer(fct_recode(as_factor(`Customer.Segment`), .default = "NA")),
+    `Customer.State` = as.integer(fct_recode(as_factor(`Customer.State`), .default = "NA")),
+    `Order.Region` = as.integer(fct_recode(as_factor(`Order.Region`), .default = "NA")),
+    `Order.City` = as.integer(fct_recode(as_factor(`Order.City`), .default = "NA")),
+    `Category.Name` = as.integer(fct_recode(as_factor(`Category.Name`), .default = "NA")),
+    `Customer.City` = as.integer(fct_recode(as_factor(`Customer.City`), .default = "NA")),
+    `Department.Name` = as.integer(fct_recode(as_factor(`Department.Name`), .default = "NA")),
+    `Order.State` = as.integer(fct_recode(as_factor(`Order.State`), .default = "NA")),
+    `Shipping.Mode` = as.integer(fct_recode(as_factor(`Shipping.Mode`), .default = "NA")),
+    `Order.Country` = as.integer(fct_recode(as_factor(`Order.Country`), .default = "NA")),
+    `Customer.Full.Name` = as.integer(fct_recode(as_factor(`Customer.Full.Name`), .default = "NA"))
+  )
+```
+
+```{r,results='markup'}
+library(caret)
+set.seed(42)
+xf <- train_data[, !(names(train_data) == "fraud")]
+yf <- train_data$fraud
+set_split_fraud <- createDataPartition(yf, p = 0.8, list = FALSE)
+xf_train_fraud <- xf[set_split_fraud, ]
+xf_test_fraud <- xf[-set_split_fraud, ]
+yf_train <- yf[set_split_fraud]
+yf_test <- yf[-set_split_fraud]
+xl <- train_data[, !(names(train_data) == "late_delivery")]
+yl <- train_data$late_delivery
+set_split_late_delivery <- createDataPartition(yl, p = 0.8, list = FALSE)
+xl_train_late_delivery <- xl[set_split_late_delivery, ]
+xl_test_late_delivery <- xl[-set_split_late_delivery, ]
+yl_train <- yl[set_split_late_delivery]
+yl_test <- yl[-set_split_late_delivery]
+```
 
 
 
 
+```{r,results='markup'}
+xf_train <- scale(xf_train_fraud)
+xf_test <- scale(xf_test_fraud)
+xl_train <- scale(xl_train_late_delivery)
+xl_test <- scale(xl_test_late_delivery)
+```
+
+```{r,results='markup'}
+classifier_model <- function(model_f, model_l, xf_train, xf_test, yf_train, yf_test, xl_train, xl_test, yl_train, yl_test) {
+  model_f <- train(model_f, xf_train, yf_train)
+  
+  model_l <- train(model_l, xl_train, yl_train)
+  
+  yf_pred <- predict(model_f, xf_test)
+  
+  yl_pred <- predict(model_l, xl_test)
+  
+  accuracy_f <- sum(yf_pred == yf_test) / length(yf_test) * 100
+  
+  accuracy_l <- sum(yl_pred == yl_test) / length(yl_test) * 100
+  
+  recall_f <- sum(yf_pred == 1 & yf_test == 1) / sum(yf_test == 1) * 100
+  
+  recall_l <- sum(yl_pred == 1 & yl_test == 1) / sum(yl_test == 1) * 100
+  
+  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
+  
+  f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
+  
+  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
+  cat("Recall score of fraud status is:", recall_f, "%\n")
+  cat("F1 score of fraud status is:", f1_f, "%\n")
+  cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
+  cat("Recall score of late delivery status is:", recall_l, "%\n")
+  cat("F1 score of late delivery status is:", f1_l, "%\n")
+}
+
+```
+
+#Model 1: Logistic Regression
+```{r,results='markup'}
+library(caret)
+
+model_f <- glm(fraud ~ ., data = data.frame(fraud = yf_train, xf_train), family = binomial(link = "logit"))
+model_l <- glm(late_delivery ~ ., data = data.frame(late_delivery = yl_train, xl_train), family = binomial(link = "logit"))
+classifier_model <- function(model_f, model_l, xf_test, yf_test, xl_test, yl_test) {
+  yf_pred <- predict(model_f, newdata = data.frame(xf_test), type = "response")
+  
+  yl_pred <- predict(model_l, newdata = data.frame(xl_test), type = "response")
+  
+  accuracy_f <- sum((yf_pred >= 0.5) == yf_test) / length(yf_test) * 100
+  
+  accuracy_l <- sum((yl_pred >= 0.5) == yl_test) / length(yl_test) * 100
+  
+  recall_f <- sum((yf_pred >= 0.5) & yf_test == 1) / sum(yf_test == 1) * 100
+  
+  recall_l <- sum((yl_pred >= 0.5) & yl_test == 1) / sum(yl_test == 1) * 100
+  
+  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
+  
+  f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
+  
+  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
+  cat("Recall score of fraud status is:", recall_f, "%\n")
+  cat("F1 score of fraud status is:", f1_f, "%\n")
+  cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
+  cat("Recall score of late delivery status is:", recall_l, "%\n")
+  cat("F1 score of late delivery status is:", f1_l, "%\n")
+}
+classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
+
+```
+
+#Model 2 Naive Bayes
 
 
+```{r,results='markup'}
+
+library(e1071)
+
+model_f <- naiveBayes(yf_train ~ ., data = data.frame(yf_train, xf_train), laplace = 1)
+model_l <- naiveBayes(yl_train ~ ., data = data.frame(yl_train, xl_train), laplace = 1)
+
+classifier_model <- function(model_f, model_l, xf_test, yf_test, xl_test, yl_test) {
+  yf_pred <- predict(model_f, newdata = data.frame(xf_test))
+  
+  yl_pred <- predict(model_l, newdata = data.frame(xl_test))
+  
+  accuracy_f <- sum(yf_pred == yf_test) / length(yf_test) * 100
+  
+  accuracy_l <- sum(yl_pred == yl_test) / length(yl_test) * 100
+  
+  recall_f <- sum(yf_pred == 1 & yf_test == 1) / sum(yf_test == 1) * 100
+  
+  recall_l <- sum(yl_pred == 1 & yl_test == 1) / sum(yl_test == 1) * 100
+  
+  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
+  
+  f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
+  
+  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
+  cat("Recall score of fraud status is:", recall_f, "%\n")
+  cat("F1 score of fraud status is:", f1_f, "%\n")
+  cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
+  cat("Recall score of late delivery status is:", recall_l, "%\n")
+  cat("F1 score of late delivery status is:", f1_l, "%\n")
+}
+
+
+classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
+
+
+```
+
+#Model 3 KNN
+
+```{r, results='markup'}
+if (!require(class)) {
+  install.packages("class")
+}
+library(class)
+
+model_f <- knn(xf_train, xf_test, yf_train, k = 1)
+model_l <- knn(xl_train, xl_test, yl_train, k = 1)
+
+classifier_model <- function(model_f, model_l, xf_test, yf_test, xl_test, yl_test) {
+  accuracy_f <- sum(model_f == yf_test) / length(yf_test) * 100
+  
+  accuracy_l <- sum(model_l == yl_test) / length(yl_test) * 100
+  
+  recall_f <- sum(model_f == 1 & yf_test == 1) / sum(yf_test == 1) * 100
+  
+  recall_l <- sum(model_l == 1 & yl_test == 1) / sum(yl_test == 1) * 100
+  
+  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
+  
+  f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
+  
+  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
+  cat("Recall score of fraud status is:", recall_f, "%\n")
+  cat("F1 score of fraud status is:", f1_f, "%\n")
+  cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
+  cat("Recall score of late delivery status is:", recall_l, "%\n")
+  cat("F1 score of late delivery status is:", f1_l, "%\n")
+}
+
+
+classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
+```
+
+#Model 4 Random Forest
+
+```{r,results='markup'}
+if (!require(randomForest)) {
+  install.packages("randomForest")
+}
+library(randomForest)
+model_f <- randomForest(yf_train ~ ., data = data.frame(yf_train, xf_train), ntree = 100)
+model_l <- randomForest(yl_train ~ ., data = data.frame(yl_train, xl_train), ntree = 100, mtry = 10)
+
+classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
+```
