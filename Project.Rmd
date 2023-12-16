@@ -1,6 +1,8 @@
 ---
-title: "Project"
-output: html_document
+title: "Predictive Analytics in Supply Chain Management: A Classification Model for Assessing Delivery Timeliness"
+output: 
+  html_document:
+    code_folding: hide
 date: "2023-12-12"
 ---
 
@@ -9,54 +11,39 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+# Introduction
 
+In today's competitive market, the ability to predict delivery times accurately is crucial for the success of supply chain operations. This report introduces a robust classification model, leveraging predictive analytics to determine whether products will be delivered on time, thereby enhancing efficiency and customer satisfaction in supply chain management
 
+### Background
 
+* Predicting delivery times accurately is a tough task for businesses. When deliveries don't arrive as planned, customers can become dissatisfied, and businesses often have to compensate them with refunds or discounts. This not only costs money but can also disrupt their inventory management. 
 
+* The traditional methods of predicting delivery times aren't always reliable, especially when unexpected issues occur. By using various machine learning algorithms, we can build a model that predicts whether a product will be delivered on time or not.
 
+* This approach helps businesses improve their predictions about delivery times, which in turn keeps customers happier, reduces costs, and makes the whole supply chain run more efficiently.
 
+### Purpose of the Report
 
-
-
-
-
-
-
-
-
-
-
-
-
+This report presents a comprehensive summary of our project, which involved developing a classification model using predictive analytics to accurately forecast whether a product will be delivered on time or experience delays.
 
 # Data Pre-processing
 
 ```{r,results='markup'}
 data= read.csv('DataCoSupplyChainDataset.csv')
-head(data)
+head(data,1)
 ```
-
-
 ```{r,results='markup'}
 str(data)
 ```
 
-
-```{r,results='markup'}
-dim(is.na(data))
-```
-
-
 ```{r,results='markup'}
 data$`Customer.Full.Name` <- paste(data$`Customer.Fname`, data$`Customer.Lname`)
 ```
+
+
 ```{r,results='markup'}
 colSums(is.na(data))
-```
-
-```{r,results='markup'}
-data[1, ]
-
 ```
 
 ```{r,results='markup'}
@@ -73,58 +60,11 @@ data$Product.Status <-NULL
 data$Customer.Street <- NULL
 data$Latitude<- NULL
 data$Longitude <- NULL
-```
-
-```{r,results='markup'}
-data[1,]
-```
-
-```{r,results='markup'}
-colSums(is.na(data))
-```
-
-```{r,results='markup'}
 data <- na.omit(data)
 ```
 
 ```{r,results='markup'}
-dim(data)
-```
-
-```{r,results='markup'}
-str(data)
-```
-
-```{r,results='markup'}
-unique_values_count <- sapply(data, function(x) length(unique(x)))
-unique_values_count
-```
-
-
-```{r,results='markup'}
-colnames(data)
-```
-
-
-
-
-
-```{r,results='markup'}
-sapply(data, class)
-```
-
-```{r,results='markup'}
 value_counts <- table(data$Late_delivery_risk)
-value_counts
-```
-
-
-
-```{r,results='markup'}
-data[1,]
-```
-```{r,results='markup'}
-install.packages('corrplot')
 ```
 
 ```{r, results='markup'}
@@ -137,8 +77,14 @@ corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col 
 ```
 
 
+
+
+
+
+Based on the insights from the correlation matrix, it's evident that columns such as Order.Item.Product.Price, Sales.per.customer, Order.Item.Total, Order.customer.Id, and Order.Profit.Per.Order are repetitive. Therefore, these columns have been removed from the analysis.
+
 ```{r, results='markup'}
-# deleting redundant columns
+
 data$Order.Item.Product.Price <- NULL
 data$Sales.per.customer <- NULL
 data$Order.Item.Total <- NULL
@@ -195,13 +141,11 @@ legend("topright",
 title(main = "Distribution of Payment Methods", cex.main = 2)
 ```
 
+From the figure, we can extrapolate that debit payments are the predominant method, accounting for over a third of all transactions. Electronic transfers also represent a significant portion, indicating a preference for cashless transactions. Cash payments, while still used, constitute the smallest share, suggesting a lesser role in the current payment landscape
 
 ```{r, results='markup'}
 # Grouping by Market
 market <- data %>% group_by(Market)
-
-# Grouping by Order Region
-region <- data %>% group_by(`Order.Region`)
 
 # Plotting Total Sales for all Markets
 plot_market <- market %>% summarise(total_sales = sum(`Sales`)) %>%
@@ -211,6 +155,17 @@ plot_market <- market %>% summarise(total_sales = sum(`Sales`)) %>%
   labs(title = "Total Sales for all Markets", x = "Market", y = "Total Sales") +
   theme_minimal()
 
+# Display the plots
+print(plot_market)
+
+```
+
+The bar chart indicates that Europe has the highest overall sales, while Africa shows the lowest total sales. Based on this observation, a new company looking to enter the market might consider prioritizing the European market over Africa.
+
+
+```{r,results='markup'}
+# Grouping by Order Region
+region <- data %>% group_by(`Order.Region`)
 # Plotting Total Sales for all Regions
 plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
   arrange(desc(total_sales)) %>%
@@ -219,17 +174,12 @@ plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
   labs(title = "Total Sales for all Regions", x = "Order Region", y = "Total Sales") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-# Display the plots
-print(plot_market)
 print(plot_region)
 ```
 
-```{r, results='markup'}
-if (!requireNamespace("viridis", quietly = TRUE)) {
-  install.packages("viridis")
-}
+The bar chart illustrates that Western Europe and Central America top the list in terms of total sales by region, while Southern Africa, Canada, and the Central Asia region display the lowest sales. Consequently, emerging companies aiming to enter the market are advised to prioritize regions with the most significant sales figures.
 
+```{r, results='markup'}
 library(viridis)
 
 total_sales_per_category <- data %>%
@@ -253,6 +203,7 @@ ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total
 
 ```
 
+The chart reveals a strong market preference for outdoor and fitness-related products, with Fishing leading, while the Computers category shows minimal sales, indicating a potential area for improvement or re-evaluation.
 
 ```{r, results='markup'}
 # Filter data for losses
@@ -289,48 +240,39 @@ cat("Total revenue lost with orders:", sum(loss$`Benefit.per.order`), "\n")
 
 # Display the plots
 print(plot_top_products)
+```
+
+The bar chart shows that product categories related to clothing and footwear, specifically Cleats, Men's Footwear, and Women's Apparel, have the greatest number of orders that have resulted in losses, hinting at possible challenges in product satisfaction, return rates, or quality.
+
+On the other hand, the Electronics category has the smallest number of loss-making orders, possibly indicating better performance in terms of customer satisfaction or return management.
+
+
+```{r,results='markup'}
 print(plot_top_regions)
-
 ```
 
+Central America and Western Europe top the chart for the number of loss-incurred orders, indicating potential issues in supply chain, customer satisfaction, or market dynamics in these regions. In contrast, South Asia shows the lowest number of loss-making orders, which could reflect more efficient operations or a better market fit for the products sold there.
 
-#Model Building
+# Model Building
 
-```{r,results='markup'}
-train_data <- data
-```
+To determine the best model for predicting on-time product delivery, we first analyzed the problem's binary classification nature and the data's features, applying appropriate encoding techniques.
 
-
-```{r,results='markup'}
-unique_values <- unique(train_data$Order.Status)
-unique_values
-
-```
-
-
-```{r,results='markup'}
-train_data$fraud <- ifelse(train_data$`Order.Status` == 'SUSPECTED_FRAUD', 1, 0)
-train_data$late_delivery <- ifelse(train_data$`Delivery.Status` == 'Late delivery', 1, 0)
-head(train_data,2)
-```
-
-
-
-```{r,results='markup'}
-library(dplyr)
-train_data <- train_data %>%
-  select(-Delivery.Status, -Late_delivery_risk, -Order.Status)
-head(train_data)
-```
-```{r,results='markup'}
-str(train_data)
-```
-
-
-
+Logistic Regression, KNN, and Naive Bayes models were then trained, with their performance being evaluated using metrics such as accuracy, recall and F1-score. The final model selection was based on a balance of accuracy, interpretability, and computational efficiency, with adjustments made through hyperparameter tuning to optimize performance.
 
 ```{r,results='markup'}
 library(forcats)
+library(dplyr)
+library(caret)
+```
+
+```{r,results='markup'}
+train_data <- data
+train_data$fraud <- ifelse(train_data$`Order.Status` == 'SUSPECTED_FRAUD', 1, 0)
+train_data$late_delivery <- ifelse(train_data$`Delivery.Status` == 'Late delivery', 1, 0)
+
+
+train_data <- train_data %>%
+  select(-Delivery.Status, -Late_delivery_risk, -Order.Status)
 
 train_data <- train_data %>%
   mutate(
@@ -350,18 +292,10 @@ train_data <- train_data %>%
     `Order.Country` = as.integer(fct_recode(as_factor(`Order.Country`), .default = "NA")),
     `Customer.Full.Name` = as.integer(fct_recode(as_factor(`Customer.Full.Name`), .default = "NA"))
   )
-```
 
-```{r,results='markup'}
-library(caret)
+
 set.seed(42)
-xf <- train_data[, !(names(train_data) == "fraud")]
-yf <- train_data$fraud
-set_split_fraud <- createDataPartition(yf, p = 0.8, list = FALSE)
-xf_train_fraud <- xf[set_split_fraud, ]
-xf_test_fraud <- xf[-set_split_fraud, ]
-yf_train <- yf[set_split_fraud]
-yf_test <- yf[-set_split_fraud]
+
 xl <- train_data[, !(names(train_data) == "late_delivery")]
 yl <- train_data$late_delivery
 set_split_late_delivery <- createDataPartition(yl, p = 0.8, list = FALSE)
@@ -369,43 +303,31 @@ xl_train_late_delivery <- xl[set_split_late_delivery, ]
 xl_test_late_delivery <- xl[-set_split_late_delivery, ]
 yl_train <- yl[set_split_late_delivery]
 yl_test <- yl[-set_split_late_delivery]
-```
 
-
-
-
-```{r,results='markup'}
-xf_train <- scale(xf_train_fraud)
-xf_test <- scale(xf_test_fraud)
 xl_train <- scale(xl_train_late_delivery)
 xl_test <- scale(xl_test_late_delivery)
 ```
 
 ```{r,results='markup'}
-classifier_model <- function(model_f, model_l, xf_train, xf_test, yf_train, yf_test, xl_train, xl_test, yl_train, yl_test) {
-  model_f <- train(model_f, xf_train, yf_train)
+classifier_model <- function( model_l, xl_train, xl_test, yl_train, yl_test) {
+
   
   model_l <- train(model_l, xl_train, yl_train)
   
-  yf_pred <- predict(model_f, xf_test)
   
   yl_pred <- predict(model_l, xl_test)
   
-  accuracy_f <- sum(yf_pred == yf_test) / length(yf_test) * 100
+
   
   accuracy_l <- sum(yl_pred == yl_test) / length(yl_test) * 100
   
-  recall_f <- sum(yf_pred == 1 & yf_test == 1) / sum(yf_test == 1) * 100
-  
+
   recall_l <- sum(yl_pred == 1 & yl_test == 1) / sum(yl_test == 1) * 100
   
-  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
-  
+
   f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
   
-  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
-  cat("Recall score of fraud status is:", recall_f, "%\n")
-  cat("F1 score of fraud status is:", f1_f, "%\n")
+
   cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
   cat("Recall score of late delivery status is:", recall_l, "%\n")
   cat("F1 score of late delivery status is:", f1_l, "%\n")
@@ -417,35 +339,36 @@ classifier_model <- function(model_f, model_l, xf_train, xf_test, yf_train, yf_t
 ```{r,results='markup'}
 library(caret)
 
-model_f <- glm(fraud ~ ., data = data.frame(fraud = yf_train, xf_train), family = binomial(link = "logit"))
+
 model_l <- glm(late_delivery ~ ., data = data.frame(late_delivery = yl_train, xl_train), family = binomial(link = "logit"))
-classifier_model <- function(model_f, model_l, xf_test, yf_test, xl_test, yl_test) {
-  yf_pred <- predict(model_f, newdata = data.frame(xf_test), type = "response")
-  
+classifier_model <- function( model_l,  xl_test, yl_test) {
+
   yl_pred <- predict(model_l, newdata = data.frame(xl_test), type = "response")
   
-  accuracy_f <- sum((yf_pred >= 0.5) == yf_test) / length(yf_test) * 100
-  
+
   accuracy_l <- sum((yl_pred >= 0.5) == yl_test) / length(yl_test) * 100
   
-  recall_f <- sum((yf_pred >= 0.5) & yf_test == 1) / sum(yf_test == 1) * 100
-  
+
   recall_l <- sum((yl_pred >= 0.5) & yl_test == 1) / sum(yl_test == 1) * 100
   
-  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
-  
+
   f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
   
-  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
-  cat("Recall score of fraud status is:", recall_f, "%\n")
-  cat("F1 score of fraud status is:", f1_f, "%\n")
+
   cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
   cat("Recall score of late delivery status is:", recall_l, "%\n")
   cat("F1 score of late delivery status is:", f1_l, "%\n")
 }
-classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
+classifier_model( model_l,xl_test, yl_test)
 
 ```
+
+* Among the three algorithms applied, this particular model shows exceptional performance in predicting late delivery status. It achieved a high accuracy of 98.89%, indicating its effectiveness in correctly identifying late deliveries. 
+
+* With a recall score of 100%, it successfully captured all actual late delivery instances, ensuring no late deliveries were misclassified as on-time. 
+
+* The F1 score of 99.44% further underscores its precision and reliability, making it a strong contender among the algorithms evaluated for this task.
+
 
 #Model 2 Naive Bayes
 
@@ -454,39 +377,35 @@ classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
 
 library(e1071)
 
-model_f <- naiveBayes(yf_train ~ ., data = data.frame(yf_train, xf_train), laplace = 1)
 model_l <- naiveBayes(yl_train ~ ., data = data.frame(yl_train, xl_train), laplace = 1)
 
-classifier_model <- function(model_f, model_l, xf_test, yf_test, xl_test, yl_test) {
-  yf_pred <- predict(model_f, newdata = data.frame(xf_test))
-  
+classifier_model <- function( model_l, xl_test, yl_test) {
+
   yl_pred <- predict(model_l, newdata = data.frame(xl_test))
   
-  accuracy_f <- sum(yf_pred == yf_test) / length(yf_test) * 100
-  
+
   accuracy_l <- sum(yl_pred == yl_test) / length(yl_test) * 100
   
-  recall_f <- sum(yf_pred == 1 & yf_test == 1) / sum(yf_test == 1) * 100
-  
+
   recall_l <- sum(yl_pred == 1 & yl_test == 1) / sum(yl_test == 1) * 100
   
-  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
-  
+
   f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
   
-  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
-  cat("Recall score of fraud status is:", recall_f, "%\n")
-  cat("F1 score of fraud status is:", f1_f, "%\n")
+
   cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
   cat("Recall score of late delivery status is:", recall_l, "%\n")
   cat("F1 score of late delivery status is:", f1_l, "%\n")
 }
 
-
-classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
-
-
+classifier_model( model_l, xl_test, yl_test)
 ```
+
+* This model achieved an exceptionally high recall score of 99.97%, indicating it almost perfectly identified all actual late deliveries, its overall accuracy stands at a much lower 55.24%. 
+
+* This suggests a significant number of false positives (on-time deliveries incorrectly labeled as late). The F1 score, at 71.16%, reflects a better balance between precision and recall than the accuracy suggests, but it also indicates room for improvement, especially in reducing false positives.
+
+
 
 #Model 3 KNN
 
@@ -496,43 +415,40 @@ if (!require(class)) {
 }
 library(class)
 
-model_f <- knn(xf_train, xf_test, yf_train, k = 1)
 model_l <- knn(xl_train, xl_test, yl_train, k = 1)
 
-classifier_model <- function(model_f, model_l, xf_test, yf_test, xl_test, yl_test) {
-  accuracy_f <- sum(model_f == yf_test) / length(yf_test) * 100
-  
+classifier_model <- function( model_l, xl_test, yl_test) {
+
   accuracy_l <- sum(model_l == yl_test) / length(yl_test) * 100
-  
-  recall_f <- sum(model_f == 1 & yf_test == 1) / sum(yf_test == 1) * 100
   
   recall_l <- sum(model_l == 1 & yl_test == 1) / sum(yl_test == 1) * 100
   
-  f1_f <- 2 * (recall_f * accuracy_f) / (recall_f + accuracy_f)
-  
+
   f1_l <- 2 * (recall_l * accuracy_l) / (recall_l + accuracy_l)
   
-  cat("Accuracy of fraud status is:", accuracy_f, "%\n")
-  cat("Recall score of fraud status is:", recall_f, "%\n")
-  cat("F1 score of fraud status is:", f1_f, "%\n")
+
   cat("Accuracy of late delivery status is:", accuracy_l, "%\n")
   cat("Recall score of late delivery status is:", recall_l, "%\n")
   cat("F1 score of late delivery status is:", f1_l, "%\n")
 }
-
-
-classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
+classifier_model( model_l, xl_test, yl_test)
 ```
 
-#Model 4 Random Forest
+* The results from applying the KNN algorithm to predict late delivery status show solid performance across metrics. It achieved an accuracy of 84.93%, indicating a high level of correctness in its predictions.
 
-```{r,results='markup'}
-if (!require(randomForest)) {
-  install.packages("randomForest")
-}
-library(randomForest)
-model_f <- randomForest(yf_train ~ ., data = data.frame(yf_train, xf_train), ntree = 100)
-model_l <- randomForest(yl_train ~ ., data = data.frame(yl_train, xl_train), ntree = 100, mtry = 10)
+* The recall score of 86.04% demonstrates its effectiveness in identifying a majority of actual late deliveries. The F1 score, at 85.48%, indicates a good balance between precision and recall, suggesting that the model is reliable and consistent in its predictions for this specific task.
 
-classifier_model(model_f, model_l, xf_test, yf_test, xl_test, yl_test)
-```
+
+
+# Conclusion
+
+
+Considering the performance metrics of the three algorithms – a Logistic Regression model, Naive Bayes, and KNN – in predicting late delivery status, the Logistic Regression model emerges as the best choice. It outperforms the others with an exceptionally high accuracy of 98.89% and a perfect recall score of 100%, indicating its superior capability in correctly identifying both late and on-time deliveries. Its F1 score of 99.44% further confirms its high precision and reliability.
+
+While the Naive Bayes model demonstrated an impressive recall score, its significantly lower accuracy and moderate F1 score suggest a tendency towards false positives, which could be problematic in practical applications. The KNN algorithm, although showing solid and balanced performance across all metrics, doesn't quite match the high standards set by the Logistic Regression model in terms of accuracy and recall.
+
+In summary, the Logistic Regression model, with its outstanding accuracy, perfect recall, and excellent F1 score, is the most reliable and effective choice for predicting late delivery status in this scenario.
+
+
+# References
+
