@@ -226,8 +226,26 @@ print(plot_market)
 print(plot_region)
 ```
 
+```{r, results='markup'}
+total_sales_per_category <- data %>%
+  group_by(Category.Name) %>%
+  summarize(Total.Sales = sum(Sales)) %>%
+  arrange(desc(Total.Sales))
 
 
+top_10_categories <- head(total_sales_per_category, 10)
+
+
+ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total.Sales / 1e6)) + 
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + 
+  labs(title = "Top Performers: Highest-Selling Product Categories",
+       x = "Categories",
+       y = "Total Sales (in Millions)") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1)) + 
+  scale_y_continuous(breaks = c(0, 2, 4, 6), labels = c("0", "2", "4", "6")) 
+```
 
 #Model Building
 
