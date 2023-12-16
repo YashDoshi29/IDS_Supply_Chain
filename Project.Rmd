@@ -178,6 +178,74 @@ cor_matrix <- cor(numeric_data)
 corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 ```
 
+```{r,results='markup'}
+library(ggplot2)
+library(dplyr)
+
+custom_colors <- c("#004c6d", "#005b8f", "#0072b2", "#0088d2", "#009fdd")
+
+
+par(mar = c(5, 5, 4, 2))
+
+
+category_counts <- table(data$Type)
+percentage <- round((category_counts / sum(category_counts)) * 100, 2)
+
+# Create labels with percentages
+labels_with_percentage <- paste(names(category_counts), "\n", format(percentage, nsmall = 2), "%", sep = "")
+
+
+pie(category_counts,
+    labels = labels_with_percentage,
+
+    col = custom_colors,
+    cex = 0.8,
+    init.angle = 90, 
+    border = "white" 
+)
+
+
+legend("topright",
+       legend = names(category_counts),
+       fill = custom_colors,
+       cex = 0.8, 
+       bty = "n"
+)
+
+title(main = "Distribution of Payment Methods", cex.main = 2)
+```
+
+
+```{r, results='markup'}
+# Grouping by Market
+market <- data %>% group_by(Market)
+
+# Grouping by Order Region
+region <- data %>% group_by(`Order.Region`)
+
+# Plotting Total Sales for all Markets
+plot_market <- market %>% summarise(total_sales = sum(`Sales`)) %>%
+  arrange(desc(total_sales)) %>%
+  ggplot(aes(x = reorder(Market, -total_sales), y = total_sales)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Total Sales for all Markets", x = "Market", y = "Total Sales") +
+  theme_minimal()
+
+# Plotting Total Sales for all Regions
+plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
+  arrange(desc(total_sales)) %>%
+  ggplot(aes(x = reorder(`Order.Region`, -total_sales), y = total_sales)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "Total Sales for all Regions", x = "Order Region", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Display the plots
+print(plot_market)
+print(plot_region)
+```
+
+
 
 
 #Model Building
