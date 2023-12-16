@@ -113,8 +113,6 @@ data$Category.Id <- as.factor(data$Category.Id)
 data$Category.Name <- as.factor(data$Category.Name)
 data$Customer.City <- as.factor(data$Customer.City)
 data$Customer.Country <- as.factor(data$Customer.Country)
-data$Customer.Fname <- as.factor(data$Customer.Fname)
-data$Customer.Lname <- as.factor(data$Customer.Lname)
 data$Customer.Segment <- as.factor(data$Customer.Segment)
 data$Customer.State <- as.factor(data$Customer.State)
 data$Department.Id <- as.factor(data$Department.Id)
@@ -147,18 +145,43 @@ value_counts
 ```{r,results='markup'}
 data[1,]
 ```
-```{r,results='markup'}
-Days.for.shipping..real.,Days.for.shipment..scheduled.,Benefit.per.order,Sales.per.customer,Order.Item.Discount,
-Order.Item.Discount.Rate,Order.Item.Product.Price,Order.Item.Profit.Ratio,Order.Item.Quantity,Sales,Order.Item.Total,Order.Profit.Per.Order,Product.Price.
 
 
+```{r, results='markup'}
+library(corrplot)
 
+numeric_data <- data[, sapply(data, is.numeric)]
+cor_matrix <- cor(numeric_data)
+corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 ```
+
+With this Correlation plot, we can observe that there are columns that are redundant like `Order.Item.Product.Price` and `Product.Price`. So let's remove the redundant colmns and plot the correlation again.
+
+```{r, results='markup'}
+# deleting redundant columns
+data$Order.Item.Product.Price <- NULL
+data$Sales.per.customer <- NULL
+data$Order.Item.Total <- NULL
+data$Order.Customer.Id <- NULL
+data$Order.Item.Id <- NULL
+data$Order.Profit.Per.Order <- NULL
+```
+
+
+
 # EDA
 
 
+```{r, results='markup'}
+# Correlation plot
+numeric_data <- data[, sapply(data, is.numeric)]
+cor_matrix <- cor(numeric_data)
+corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+```
+
 ```{r,results='markup'}
 library(ggplot2)
+library(dplyr)
 
 custom_colors <- c("#004c6d", "#005b8f", "#0072b2", "#0088d2", "#009fdd")
 
@@ -194,10 +217,36 @@ title(main = "Distribution of Payment Methods", cex.main = 2)
 
 ```
 
+```{r, results='markup'}
+# Grouping by Market
+market <- data %>% group_by(Market)
+
+# Grouping by Order Region
+region <- data %>% group_by(`Order.Region`)
+
+# Plotting Total Sales for all Markets
+plot_market <- market %>% summarise(total_sales = sum(`Sales`)) %>%
+  arrange(desc(total_sales)) %>%
+  ggplot(aes(x = reorder(Market, -total_sales), y = total_sales)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Total Sales for all Markets", x = "Market", y = "Total Sales") +
+  theme_minimal()
+
+# Plotting Total Sales for all Regions
+plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
+  arrange(desc(total_sales)) %>%
+  ggplot(aes(x = reorder(`Order.Region`, -total_sales), y = total_sales)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "Total Sales for all Regions", x = "Order Region", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Display the plots
+print(plot_market)
+print(plot_region)
+```
 
 ```{r, results='markup'}
-
-library(dplyr)
 total_sales_per_category <- data %>%
   group_by(Category.Name) %>%
   summarize(Total.Sales = sum(Sales)) %>%
@@ -218,6 +267,46 @@ ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total
   scale_y_continuous(breaks = c(0, 2, 4, 6), labels = c("0", "2", "4", "6")) 
 ```
 
+```{r, results='markup'}
+# Grouping by Category Name
+category <- data %>% group_by(`Category.Name`)
+
+# Plotting Total Sales for all Categories
+plot_total_sales <- category %>%
+  summarise(total_sales = sum(`Sales`)) %>%
+  arrange(desc(total_sales)) %>%
+  ggplot(aes(x = reorder(`Category.Name`, -total_sales), y = total_sales)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Total Sales for all Categories", x = "Category Name", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Plotting Average Sales for all Categories
+plot_average_sales <- category %>%
+  summarise(average_sales = mean(`Sales`)) %>%
+  arrange(desc(average_sales)) %>%
+  ggplot(aes(x = reorder(`Category.Name`, -average_sales), y = average_sales)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  labs(title = "Average Sales for all Categories", x = "Category Name", y = "Average Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Plotting Average Price for all Categories
+plot_average_price <- category %>%
+  summarise(average_price = mean(`Product.Price`)) %>%
+  arrange(desc(average_price)) %>%
+  ggplot(aes(x = reorder(`Category.Name`, -average_price), y = average_price)) +
+  geom_bar(stat = "identity", fill = "coral") +
+  labs(title = "Average Price for all Categories", x = "Category Name", y = "Average Price") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Display the plots
+print(plot_total_sales)
+print(plot_average_sales)
+print(plot_average_price)
+
+```
 
 
 #Model Building
