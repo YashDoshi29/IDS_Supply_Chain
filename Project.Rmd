@@ -288,6 +288,39 @@ ggplot(data, aes(x = `Product.Price`, y = `Sales`)) +
   theme_minimal()
 ```
 
+```{r, results='markup'}
+library(viridis)
+library(ggplot2)
+
+# Market-wise Sales Distribution
+ggplot(data, aes(x = reorder(Market, -Sales), y = Sales, fill = Market)) +
+  geom_bar(stat = "identity") +
+  scale_fill_viridis(discrete = TRUE) +  # Use viridis color palette
+  labs(title = "Market-wise Sales", x = "Market", y = "Total Sales") +
+  theme_minimal()
+```
+
+```{r, results='markup'}
+library(viridis)
+library(ggplot2)
+
+# Order Status Distribution
+ggplot(data, aes(x = Order.Status, fill = Order.Status)) +
+  geom_bar() +
+  scale_fill_viridis(discrete = TRUE) +  # Use viridis color palette
+  labs(title = "Distribution of Order Statuses", x = "Order Status", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotate x-axis labels vertically
+
+# Delivery Status Distribution
+ggplot(data, aes(x = Delivery.Status, fill = Delivery.Status)) +
+  geom_bar() +
+  scale_fill_viridis(discrete = TRUE) +  # Use viridis color palette
+  labs(title = "Distribution of Delivery Statuses", x = "Delivery Status", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotate x-axis labels vertically
+```
+
 # Model Building
 
 To determine the best model for predicting on-time product delivery, we first analyzed the problem's binary classification nature and the data's features, applying appropriate encoding techniques.
