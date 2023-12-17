@@ -93,46 +93,45 @@ data$Order.Profit.Per.Order <- NULL
 # Correlation plot
 numeric_data <- data[, sapply(data, is.numeric)]
 cor_matrix <- cor(numeric_data)
-corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45,number.cex = 0.4,tl.cex = 0.5,addCoef.col = "black")
 ```
 
 # EDA
 
 ```{r,results='markup'}
-library(ggplot2)
-library(dplyr)
 
-custom_colors <- c("#004c6d", "#005b8f", "#0072b2", "#0088d2", "#009fdd")
+custom_colors <- c("#414487ff", "#2a788eff", "#7ad151ff", "#fde725ff")
 
-
-par(mar = c(5, 5, 4, 2))
-
-
+# Data
 category_counts <- table(data$Type)
 percentage <- round((category_counts / sum(category_counts)) * 100, 2)
 
-# Create labels with percentages
-labels_with_percentage <- paste(names(category_counts), "\n", format(percentage, nsmall = 2), "%", sep = "")
-
-
-pie(category_counts,
-    labels = labels_with_percentage,
-
-    col = custom_colors,
-    cex = 0.8,
-    init.angle = 90, 
-    border = "white" 
+# Create data frame for ggplot
+pie_data <- data.frame(
+  category = names(category_counts),
+  count = as.numeric(category_counts),
+  percentage = percentage
 )
 
+# Plotting with ggplot2
+pie_chart <- ggplot(pie_data, aes(x = "", y = count, fill = category)) +
+  geom_bar(stat = "identity", width = 1, color = "black") +
+  coord_polar("y", start = 0) +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 18)
+  ) +
+  geom_text(aes(label = paste(category, "\n", percentage, "%")), 
+            position = position_stack(vjust = 0.5), 
+            color = "black", size = 3) +
+  scale_fill_manual(values = custom_colors) +
+  ggtitle("Distribution of Different Payment Methods")
 
-legend("topright",
-       legend = names(category_counts),
-       fill = custom_colors,
-       cex = 0.8, 
-       bty = "n"
-)
-
-title(main = "Distribution of Payment Methods", cex.main = 2)
+# Display the plot
+print(pie_chart)
 ```
 
 From the figure, we can extrapolate that debit payments are the predominant method, accounting for over a third of all transactions. Electronic transfers also represent a significant portion, indicating a preference for cashless transactions. Cash payments, while still used, constitute the smallest share, suggesting a lesser role in the current payment landscape
@@ -141,33 +140,35 @@ From the figure, we can extrapolate that debit payments are the predominant meth
 # Grouping by Market
 market <- data %>% group_by(Market)
 
+# Grouping by Order Region
+region <- data %>% group_by(`Order.Region`)
+
 # Plotting Total Sales for all Markets
 plot_market <- market %>% summarise(total_sales = sum(`Sales`)) %>%
   arrange(desc(total_sales)) %>%
   ggplot(aes(x = reorder(Market, -total_sales), y = total_sales)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_bar(stat = "identity", fill = viridis::viridis(length(unique(market$Market)))) +
+  
   labs(title = "Total Sales for all Markets", x = "Market", y = "Total Sales") +
   theme_minimal()
-
-# Display the plots
 print(plot_market)
-
 ```
 
 The bar chart indicates that Europe has the highest overall sales, while Africa shows the lowest total sales. Based on this observation, a new company looking to enter the market might consider prioritizing the European market over Africa.
 
 
 ```{r,results='markup'}
-# Grouping by Order Region
-region <- data %>% group_by(`Order.Region`)
 # Plotting Total Sales for all Regions
 plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
   arrange(desc(total_sales)) %>%
   ggplot(aes(x = reorder(`Order.Region`, -total_sales), y = total_sales)) +
-  geom_bar(stat = "identity", fill = "lightgreen") +
+  geom_bar(stat = "identity", fill = viridis::viridis(length(unique(region$`Order.Region`))), option = "D") +
   labs(title = "Total Sales for all Regions", x = "Order Region", y = "Total Sales") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Display the plots
+
 print(plot_region)
 ```
 
