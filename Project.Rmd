@@ -100,6 +100,8 @@ corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col 
 #Distribution of payment methods
 
 ```{r,results='markup'}
+library(ggplot2)
+library(dplyr)
 
 custom_colors <- c("#414487ff", "#2a788eff", "#7ad151ff", "#fde725ff")
 
