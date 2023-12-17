@@ -201,6 +201,12 @@ ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total
 The chart reveals a strong market preference for outdoor and fitness-related products, with Fishing leading, while the Computers category shows minimal sales, indicating a potential area for improvement or re-evaluation.
 
 ```{r, results='markup'}
+# Custom Viridis Palette 1
+viridis_palette_1 <- c("#440154", "#482777", "#3F4A8A", "#31688E", "#26838F", "#1F9D8A", "#6CDB82", "#FDE725", "#B8D75A", "#92BF5D")
+
+# Custom Viridis Palette 2
+viridis_palette_2 <- c("#440154", "#48186A", "#472D7B", "#3C4D8A", "#33638D", "#2C7F8E", "#33A186", "#9FDF6A", "#FEE08B", "#FDAE61")
+
 # Filter data for losses
 loss <- data[data$`Benefit.per.order` < 0, ]
 
@@ -210,7 +216,7 @@ plot_top_products <- loss %>%
   arrange(desc(n)) %>%
   head(10) %>%
   ggplot(aes(x = reorder(`Category.Name`, -n), y = n)) +
-  geom_bar(stat = "identity", fill = "salmon") +
+  geom_bar(stat = "identity", fill = viridis_palette_1) +
   labs(title = "Products with Most Loss",
        x = "Category Name",
        y = "Number of Orders with Loss") +
@@ -223,7 +229,7 @@ plot_top_regions <- loss %>%
   arrange(desc(n)) %>%
   head(10) %>%
   ggplot(aes(x = reorder(`Order.Region`, -n), y = n)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_bar(stat = "identity", fill = viridis_palette_2) +
   labs(title = "Regions with Most Loss",
        x = "Order Region",
        y = "Number of Orders with Loss") +
@@ -248,6 +254,11 @@ print(plot_top_regions)
 
 Central America and Western Europe top the chart for the number of loss-incurred orders, indicating potential issues in supply chain, customer satisfaction, or market dynamics in these regions. In contrast, South Asia shows the lowest number of loss-making orders, which could reflect more efficient operations or a better market fit for the products sold there.
 
+
+
+
+
+
 ```{r, results='markup'}
 # Grouping by Category Name
 category <- data %>% group_by(`Category.Name`)
@@ -257,25 +268,91 @@ plot_average_sales <- category %>%
   summarise(average_sales = mean(`Sales`)) %>%
   arrange(desc(average_sales)) %>%
   ggplot(aes(x = reorder(`Category.Name`, -average_sales), y = average_sales)) +
-  geom_bar(stat = "identity", fill = "lightgreen") +
+  geom_bar(stat = "identity", fill = "#0072b2") +
   labs(title = "Average Sales for all Categories", x = "Category Name", y = "Average Sales") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+print(plot_average_sales)
+```
 
+```{r,results='markup'}
 # Plotting Average Price for all Categories
 plot_average_price <- category %>%
   summarise(average_price = mean(`Product.Price`)) %>%
   arrange(desc(average_price)) %>%
   ggplot(aes(x = reorder(`Category.Name`, -average_price), y = average_price)) +
-  geom_bar(stat = "identity", fill = "coral") +
+  geom_bar(stat = "identity", fill = "#004c6d") +
   labs(title = "Average Price for all Categories", x = "Category Name", y = "Average Price") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 # Display the plots
-print(plot_average_sales)
+
 print(plot_average_price)
 ```
+```{r, results='markup'}
+
+# Customer Segments Distribution
+segment_palette <- c("#482777", "#31688E", "#1F9D8A")
+ggplot(data, aes(x = reorder(Customer.Segment, -Sales), fill = Customer.Segment)) +
+  geom_bar() +
+  labs(title = "Distribution of Customer Segments", x = "Customer Segment", y = "Number of customers") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_fill_manual(values = segment_palette)
+
+```
+```{r,results='markup'}
+
+if (!requireNamespace("viridis", quietly = TRUE)) {
+  install.packages("viridis")
+}
+library(viridis)
+
+# Viridis color palette with 10 colors
+viridis_palette <- viridis(10)
+
+# Repeat the colors to meet the requirement (50 colors)
+viridis_palette_repeated <- rep(viridis_palette, length.out = 50)
+
+# Product Categories Distribution
+ggplot(data, aes(x = reorder(Category.Name, -Sales), fill = Category.Name)) +
+  geom_bar(stat = "count", color = "white", width = 0.7) +
+  scale_fill_manual(values = viridis_palette_repeated) +  # Use Viridis color palette
+  labs(title = "Distribution of Product Categories", x = "Product Category", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "none",  # Hide legend
+        panel.grid.major = element_blank(),  # Remove major gridlines
+        panel.grid.minor = element_blank(),  # Remove minor gridlines
+        panel.border = element_blank(),  # Remove panel border
+        axis.line = element_line(color = 'black'),  # Add x-axis line
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5, size = 12))
+```
+```{r, results='markup'}
+
+
+scale_fill_manual(values = category_palette)
+# Top Selling Products
+top_selling <- data %>%
+  group_by(Product.Name) %>%
+  summarise(Total_Sales = sum(Sales)) %>%
+  arrange(desc(Total_Sales)) %>%
+  head(10)
+
+ggplot(top_selling, aes(x = reorder(Product.Name, Total_Sales), y = Total_Sales / 1e6)) + 
+  geom_point(size = 4, color = viridis(10)) +
+  coord_flip() + 
+  labs(title = "Top Selling Products",
+       x = "Products",
+       y = "Total Sales (in Millions)") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1))
+
+```
+
+
 
 ```{r, results='markup'}
 # Scatter plot for Product Price vs. Sales per customer
@@ -311,7 +388,9 @@ ggplot(data, aes(x = Order.Status, fill = Order.Status)) +
   labs(title = "Distribution of Order Statuses", x = "Order Status", y = "Count") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotate x-axis labels vertically
+```
 
+```{r,results='markup'}
 # Delivery Status Distribution
 ggplot(data, aes(x = Delivery.Status, fill = Delivery.Status)) +
   geom_bar() +
