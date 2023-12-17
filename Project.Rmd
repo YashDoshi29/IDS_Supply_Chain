@@ -77,10 +77,6 @@ corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col 
 ```
 
 
-
-
-
-
 Based on the insights from the correlation matrix, it's evident that columns such as Order.Item.Product.Price, Sales.per.customer, Order.Item.Total, Order.customer.Id, and Order.Profit.Per.Order are repetitive. Therefore, these columns have been removed from the analysis.
 
 ```{r, results='markup'}
@@ -93,16 +89,14 @@ data$Order.Item.Id <- NULL
 data$Order.Profit.Per.Order <- NULL
 ```
 
-
-
-# EDA
-
 ```{r, results='markup'}
 # Correlation plot
 numeric_data <- data[, sapply(data, is.numeric)]
 cor_matrix <- cor(numeric_data)
 corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 ```
+
+# EDA
 
 ```{r,results='markup'}
 library(ggplot2)
