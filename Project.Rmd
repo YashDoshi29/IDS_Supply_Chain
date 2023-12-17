@@ -90,7 +90,6 @@ data$Order.Profit.Per.Order <- NULL
 ```
 
 ```{r, results='markup'}
-# Correlation plot
 numeric_data <- data[, sapply(data, is.numeric)]
 cor_matrix <- cor(numeric_data)
 corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col = "black", tl.srt = 45,number.cex = 0.4,tl.cex = 0.5,addCoef.col = "black")
@@ -98,22 +97,21 @@ corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", tl.col 
 
 # EDA
 
+#Distribution of payment methods
+
 ```{r,results='markup'}
 
 custom_colors <- c("#414487ff", "#2a788eff", "#7ad151ff", "#fde725ff")
 
-# Data
 category_counts <- table(data$Type)
 percentage <- round((category_counts / sum(category_counts)) * 100, 2)
 
-# Create data frame for ggplot
 pie_data <- data.frame(
   category = names(category_counts),
   count = as.numeric(category_counts),
   percentage = percentage
 )
 
-# Plotting with ggplot2
 pie_chart <- ggplot(pie_data, aes(x = "", y = count, fill = category)) +
   geom_bar(stat = "identity", width = 1, color = "black") +
   coord_polar("y", start = 0) +
@@ -130,20 +128,18 @@ pie_chart <- ggplot(pie_data, aes(x = "", y = count, fill = category)) +
   scale_fill_manual(values = custom_colors) +
   ggtitle("Distribution of Different Payment Methods")
 
-# Display the plot
 print(pie_chart)
 ```
 
 From the figure, we can extrapolate that debit payments are the predominant method, accounting for over a third of all transactions. Electronic transfers also represent a significant portion, indicating a preference for cashless transactions. Cash payments, while still used, constitute the smallest share, suggesting a lesser role in the current payment landscape
 
+#Total sales across markets
+
 ```{r, results='markup'}
-# Grouping by Market
 market <- data %>% group_by(Market)
 
-# Grouping by Order Region
 region <- data %>% group_by(`Order.Region`)
 
-# Plotting Total Sales for all Markets
 plot_market <- market %>% summarise(total_sales = sum(`Sales`)) %>%
   arrange(desc(total_sales)) %>%
   ggplot(aes(x = reorder(Market, -total_sales), y = total_sales)) +
@@ -157,8 +153,10 @@ print(plot_market)
 The bar chart indicates that Europe has the highest overall sales, while Africa shows the lowest total sales. Based on this observation, a new company looking to enter the market might consider prioritizing the European market over Africa.
 
 
+#Total sales across regions
+
 ```{r,results='markup'}
-# Plotting Total Sales for all Regions
+
 plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
   arrange(desc(total_sales)) %>%
   ggplot(aes(x = reorder(`Order.Region`, -total_sales), y = total_sales)) +
@@ -167,12 +165,12 @@ plot_region <- region %>% summarise(total_sales = sum(`Sales`)) %>%
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-# Display the plots
-
 print(plot_region)
 ```
 
 The bar chart illustrates that Western Europe and Central America top the list in terms of total sales by region, while Southern Africa, Canada, and the Central Asia region display the lowest sales. Consequently, emerging companies aiming to enter the market are advised to prioritize regions with the most significant sales figures.
+
+#Highest selling products categories 
 
 ```{r, results='markup'}
 library(viridis)
@@ -200,17 +198,16 @@ ggplot(top_10_categories, aes(x = reorder(Category.Name, Total.Sales), y = Total
 
 The chart reveals a strong market preference for outdoor and fitness-related products, with Fishing leading, while the Computers category shows minimal sales, indicating a potential area for improvement or re-evaluation.
 
+#Top 10 products with most loss
+
 ```{r, results='markup'}
-# Custom Viridis Palette 1
+
 viridis_palette_1 <- c("#440154", "#482777", "#3F4A8A", "#31688E", "#26838F", "#1F9D8A", "#6CDB82", "#FDE725", "#B8D75A", "#92BF5D")
 
-# Custom Viridis Palette 2
 viridis_palette_2 <- c("#440154", "#48186A", "#472D7B", "#3C4D8A", "#33638D", "#2C7F8E", "#33A186", "#9FDF6A", "#FEE08B", "#FDAE61")
 
-# Filter data for losses
 loss <- data[data$`Benefit.per.order` < 0, ]
-
-# Plotting top 10 products with most loss
+ 
 plot_top_products <- loss %>%
   count(`Category.Name`) %>%
   arrange(desc(n)) %>%
@@ -222,8 +219,11 @@ plot_top_products <- loss %>%
        y = "Number of Orders with Loss") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
-# Plotting top 10 regions with most loss
+# Top 10 regions with most loss
+
+```{r, results='markup'}
 plot_top_regions <- loss %>%
   count(`Order.Region`) %>%
   arrange(desc(n)) %>%
@@ -236,10 +236,8 @@ plot_top_regions <- loss %>%
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Print total revenue lost with orders
 cat("Total revenue lost with orders:", sum(loss$`Benefit.per.order`), "\n")
 
-# Display the plots
 print(plot_top_products)
 ```
 
@@ -254,16 +252,11 @@ print(plot_top_regions)
 
 Central America and Western Europe top the chart for the number of loss-incurred orders, indicating potential issues in supply chain, customer satisfaction, or market dynamics in these regions. In contrast, South Asia shows the lowest number of loss-making orders, which could reflect more efficient operations or a better market fit for the products sold there.
 
-
-
-
-
+#Average Sales for all Categories
 
 ```{r, results='markup'}
-# Grouping by Category Name
 category <- data %>% group_by(`Category.Name`)
 
-# Plotting Average Sales for all Categories
 plot_average_sales <- category %>%
   summarise(average_sales = mean(`Sales`)) %>%
   arrange(desc(average_sales)) %>%
@@ -274,25 +267,11 @@ plot_average_sales <- category %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 print(plot_average_sales)
 ```
-
-```{r,results='markup'}
-# Plotting Average Price for all Categories
-plot_average_price <- category %>%
-  summarise(average_price = mean(`Product.Price`)) %>%
-  arrange(desc(average_price)) %>%
-  ggplot(aes(x = reorder(`Category.Name`, -average_price), y = average_price)) +
-  geom_bar(stat = "identity", fill = "#004c6d") +
-  labs(title = "Average Price for all Categories", x = "Category Name", y = "Average Price") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-# Display the plots
-
-print(plot_average_price)
-```
-```{r, results='markup'}
+The bar chart indicates that computers tops the list in terms of average sales, demonstrating a notable lead over other categories. Toys and CDs appear to have lower average sales compared to the leading category, suggesting potential areas for improvement and strategic focus.
 
 # Customer Segments Distribution
+
+```{r, results='markup'}
 segment_palette <- c("#482777", "#31688E", "#1F9D8A")
 ggplot(data, aes(x = reorder(Customer.Segment, -Sales), fill = Customer.Segment)) +
   geom_bar() +
@@ -302,86 +281,15 @@ ggplot(data, aes(x = reorder(Customer.Segment, -Sales), fill = Customer.Segment)
   scale_fill_manual(values = segment_palette)
 
 ```
-```{r,results='markup'}
+The bar chart illustrates a substantial customer base in the "Consumer" segment, surpassing "Corporate" and "Home Office." This indicates a consumer-focused market presence, suggesting potential for tailored strategies. Consideration of these segment sizes can inform effective marketing and business decisions.
 
-if (!requireNamespace("viridis", quietly = TRUE)) {
-  install.packages("viridis")
-}
-library(viridis)
-
-# Viridis color palette with 10 colors
-viridis_palette <- viridis(10)
-
-# Repeat the colors to meet the requirement (50 colors)
-viridis_palette_repeated <- rep(viridis_palette, length.out = 50)
-
-# Product Categories Distribution
-ggplot(data, aes(x = reorder(Category.Name, -Sales), fill = Category.Name)) +
-  geom_bar(stat = "count", color = "white", width = 0.7) +
-  scale_fill_manual(values = viridis_palette_repeated) +  # Use Viridis color palette
-  labs(title = "Distribution of Product Categories", x = "Product Category", y = "Count") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "none",  # Hide legend
-        panel.grid.major = element_blank(),  # Remove major gridlines
-        panel.grid.minor = element_blank(),  # Remove minor gridlines
-        panel.border = element_blank(),  # Remove panel border
-        axis.line = element_line(color = 'black'),  # Add x-axis line
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5, size = 12))
-```
-```{r, results='markup'}
-
-
-scale_fill_manual(values = category_palette)
-# Top Selling Products
-top_selling <- data %>%
-  group_by(Product.Name) %>%
-  summarise(Total_Sales = sum(Sales)) %>%
-  arrange(desc(Total_Sales)) %>%
-  head(10)
-
-ggplot(top_selling, aes(x = reorder(Product.Name, Total_Sales), y = Total_Sales / 1e6)) + 
-  geom_point(size = 4, color = viridis(10)) +
-  coord_flip() + 
-  labs(title = "Top Selling Products",
-       x = "Products",
-       y = "Total Sales (in Millions)") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(angle = 0, hjust = 1))
-
-```
-
-
-
-```{r, results='markup'}
-# Scatter plot for Product Price vs. Sales per customer
-ggplot(data, aes(x = `Product.Price`, y = `Sales`)) +
-  geom_point(shape = 1, size = 2, color = "blue", fill = "blue") +
-  geom_smooth(method = "lm", se = FALSE, linetype = "dotted", color = "blue") +
-  labs(title = "Product Price vs Sales per customer",
-       x = "Product Price",
-       y = "Sales per customer") +
-  theme_minimal()
-```
-
-```{r, results='markup'}
-library(viridis)
-library(ggplot2)
-
-# Market-wise Sales Distribution
-ggplot(data, aes(x = reorder(Market, -Sales), y = Sales, fill = Market)) +
-  geom_bar(stat = "identity") +
-  scale_fill_viridis(discrete = TRUE) +  # Use viridis color palette
-  labs(title = "Market-wise Sales", x = "Market", y = "Total Sales") +
-  theme_minimal()
-```
-
-```{r, results='markup'}
-library(viridis)
-library(ggplot2)
 
 # Order Status Distribution
+
+```{r, results='markup'}
+library(viridis)
+library(ggplot2)
+
 ggplot(data, aes(x = Order.Status, fill = Order.Status)) +
   geom_bar() +
   scale_fill_viridis(discrete = TRUE) +  # Use viridis color palette
@@ -389,9 +297,12 @@ ggplot(data, aes(x = Order.Status, fill = Order.Status)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotate x-axis labels vertically
 ```
+The following graph shows the distribution of order in terms of statuses. The order statuses with COMPLETE has the highest distribution followed by PENDING_PAYMENT. Whereas CANCELLED,PAYMENT_REVIEW, and SUSPECTED_FRAUD has the least amount of distribution.
+
+# Delivery Status Distribution
 
 ```{r,results='markup'}
-# Delivery Status Distribution
+
 ggplot(data, aes(x = Delivery.Status, fill = Delivery.Status)) +
   geom_bar() +
   scale_fill_viridis(discrete = TRUE) +  # Use viridis color palette
@@ -399,6 +310,7 @@ ggplot(data, aes(x = Delivery.Status, fill = Delivery.Status)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))  # Rotate x-axis labels vertically
 ```
+The following graph shows the distribution of delivery status , i.e. , either the product is shipped in advance, on time, late or is it cancelled. One can infer from the graph that orders being delivered late has the highest amount of distribution, followed by orders shipped in advance. Orders that are cancelled has the least distribution.
 
 # Model Building
 
@@ -589,7 +501,6 @@ classifier_model( model_l, xl_test, yl_test)
 
 # Conclusion
 
-
 Considering the performance metrics of the three algorithms – a Logistic Regression model, Naive Bayes, and KNN – in predicting late delivery status, the Logistic Regression model emerges as the best choice. It outperforms the others with an exceptionally high accuracy of 98.89% and a perfect recall score of 100%, indicating its superior capability in correctly identifying both late and on-time deliveries. Its F1 score of 99.44% further confirms its high precision and reliability.
 
 While the Naive Bayes model demonstrated an impressive recall score, its significantly lower accuracy and moderate F1 score suggest a tendency towards false positives, which could be problematic in practical applications. The KNN algorithm, although showing solid and balanced performance across all metrics, doesn't quite match the high standards set by the Logistic Regression model in terms of accuracy and recall.
@@ -598,4 +509,22 @@ In summary, the Logistic Regression model, with its outstanding accuracy, perfec
 
 
 # References
+* Carbonneau, R., Laframboise, K., & Vahidov, R.(2008). Application of machine learning techniques for supply chain demand forecasting. European Journal of Operational Research, 184(3), 1140-1154.
 
+* Ferreira, K.J., Lee, B.H.A., & Simchi-Levi, D.(2016). Analytics for an online retailer: Demand forecasting and price optimization. Manufacturing & Service Operations Management, 18(1), 69-88.
+
+* Hassan, C.A., Khan M.S., & Shah, M.A.(2018). Comparison of Machine Learning Algorithms in Data classification. 24th International Conference on Automation and Computing (ICAC), Newcastle upon Tyne, United Kingdom, 2018, pp. 1-6.
+
+* Martinez, A., Schmuck, C., Pereverzyev Jr, S., Pirker C., & Haltmeier, M. (2020). A machine learning framework for customer purchase prediction in the non-contractual setting. European ournal of Operational Research, 281(3), 588-596.
+
+* Vakili, M., Ghamsari, M., & Rezaei, M. (2020). Performance Analysis and Comparison of Machine and Deep Learning Algorithms for IoT Data Classification. arXiv preprint arXiv:2001.09636.
+
+* Ahmed, N. K., Atiya, A. F., Gayar, N. E., & El-Shishiny, H. (2010). An Empirical Comparison of Machine Learning Models for Time Series Forecasting. Econometric Reviews, 29(5-6), 594–621.
+
+* Pawar, L., Kumar, R., & Sharma, A. (2018). Risks Analysis and Mitigation Technique in EDA Sector: VLSI Supply Chain. In Analyzing the Role of Risk Mitigation and Monitoring in Software Development (pp. 256-265). IGI Global.
+
+* Tirkolaee, E. B., Sadeghi, S., Mooseloo, F. M., Vandchali, H. R., & Aeini, S. (2021). Application of machine learning in supply chain management: a comprehensive overview of the main areas. Mathematical problems in engineering, 2021, 1-14.
+
+* Lin, H., Lin, J., & Wang, F. (2022). An innovative machine learning model for supply chain management. Journal of Innovation & Knowledge, 7(4), 100276.
+
+* Aamer, A., Eka Yani, L., & Alan Priyatna, I. (2020). Data analytics in the supply chain management: Review of machine learning applications in demand forecasting. Operations and Supply Chain Management: An International Journal, 14(1), 1-13.
